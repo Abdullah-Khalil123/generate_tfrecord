@@ -49,11 +49,32 @@ if args.image_dir is None:
     args.image_dir = args.xml_dir
 
 # Manually define the class-to-integer mapping here
-class_name_to_id = {
-    "class1": 1,  # Replace 'class1' with actual class name and assign appropriate integer value
-    "class2": 2,  # Replace 'class2' with actual class name and assign appropriate integer value
-    # Add other classes as needed
-}
+# Load the class-to-ID mapping from the .pbtxt file
+
+def load_label_map(pbtxt_path):
+    """Parses a .pbtxt file to create a class-to-ID mapping."""
+    class_name_to_id = {}
+    with open(pbtxt_path, "r") as file:
+        lines = file.readlines()
+        current_id = None
+        current_name = None
+        for line in lines:
+            line = line.strip()
+            if line.startswith("id:"):
+                # Remove commas and convert to integer
+                current_id = int(line.split(":")[1].strip().replace(",", ""))
+            elif line.startswith("name:"):
+                # Strip quotes from the name
+                current_name = line.split(":")[1].strip().strip('"')
+            if current_id is not None and current_name is not None:
+                class_name_to_id[current_name] = current_id
+                current_id = None
+                current_name = None
+    return class_name_to_id
+
+
+class_name_to_id = load_label_map(args.labels_path)
+
 
 
 def xml_to_csv(path):
